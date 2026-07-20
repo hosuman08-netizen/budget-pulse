@@ -38,6 +38,7 @@
   var root=document.getElementById('app');
   var catFilter=localStorage.getItem('bp_cat_filter')||'';
   function spent(){return s.items.reduce(function(a,b){return a+(+b.amt||0);},0);}
+  function weekLabel(){var d=new Date(); return (d.getMonth()+1)+'월 W'+Math.ceil(d.getDate()/7);}
   function weekSpend(){
     var cut=Date.now()-7*864e5;
     return s.items.reduce(function(a,it){return a+((it.t||0)>=cut?(+it.amt||0):0);},0);
@@ -117,7 +118,7 @@
       +'<div>남음 <b style="color:'+(left<0?'#f87171':'var(--gold)')+'">'+(left).toLocaleString()+'</b>원 · 항목 '+s.items.length+'</div>'
       +'<div style="margin-top:10px"><div class="sub" style="margin-bottom:4px">7일 일별 지출</div><div class="row" style="align-items:flex-end;gap:2px">'+spark+'</div></div></div>'
       +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button><label class="sub">일일 소프트 한도</label><input id="soft" type="number" value="'+softDaily+'"/><button class="sec" id="setSoft">일일 저장</button></div>'
-      +'<div class="card"><label class="sub">지출 추가</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">'+'<button class="sec" data-q="커피|4500">커피 4.5k</button>'+'<button class="sec" data-q="교통|1500">교통 1.5k</button>'+'<button class="sec" data-q="식사|12000">식사 12k</button>'+'<button class="sec" data-q="구독|9900">구독 9.9k</button></div>'+'<input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
+      +'<div class="card"><label class="sub">지출 추가</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">'+'<button class="sec" data-q="커피|4500">커피 4.5k</button>'+'<button class="sec" data-q="교통|1500">교통 1.5k</button>'+'<button class="sec" data-q="식사|12000">식사 12k</button>'+'<button class="sec" data-q="구독|9900">구독 9.9k</button>'+(s.items.length?'<button class="sec" id="repeatLast">↩ 직전 재추가</button>':'')+'</div>'+'<input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
       +'<div class="card"><b>이번 주 기록</b>'+(catFilter?' <span class="chip" id="clrCat">필터: '+catFilter+' ×</span>':'')+' <button class="sec" id="undoLast" style="float:right;padding:6px 10px;font-size:12px">↩ 직전 취소</button><div id="list"></div>'
       +'<p class="sub" id="paceTip" style="margin-top:8px"></p></div>'
       +'<div class="card" id="moneyPipe" style="text-align:center;font-size:12px">'
@@ -176,7 +177,10 @@
       var dayPace=Math.round(s.cap/7);
       var over=todaySp>dayPace;
       var weekAvg=Math.round(wd.reduce(function(a,b){return a+b.a;},0)/7);
-      pt.textContent='남은 일수 기준 일일 여유 ≈ '+pace.toLocaleString()+'원 · 오늘 '+todaySp.toLocaleString()+'원 · 7일 평균 '+weekAvg.toLocaleString()+'원'+(over?' · ⚠ 일평균('+dayPace.toLocaleString()+') 초과':' · 일평균 페이스 OK');
+      var tops=catTotals();
+      var top1=tops.length?tops[0]:null;
+      var vs=weekAvg?(todaySp>weekAvg?' · 오늘>7일평균':' · 오늘≤7일평균'):'';
+      pt.textContent='남은 일수 기준 일일 여유 ≈ '+pace.toLocaleString()+'원 · 오늘 '+todaySp.toLocaleString()+'원 · 7일 평균 '+weekAvg.toLocaleString()+'원'+vs+(over?' · ⚠ 일평균('+dayPace.toLocaleString()+') 초과':' · 일평균 페이스 OK')+(top1?' · 최대항목 '+top1.n+' '+top1.a.toLocaleString()+'원':'');
     }
     var ej=document.getElementById('exportJson');
     if(ej) ej.onclick=exportJSON;
@@ -185,6 +189,13 @@
     document.getElementById('setCap').onclick=function(){s.cap=+document.getElementById('cap').value||0;save(s);render();track('cap');};
     var ss=document.getElementById('setSoft');
     if(ss) ss.onclick=function(){var v=+document.getElementById('soft').value||0;localStorage.setItem('bp_soft_daily',String(v));render();track('soft',{v:v});};
+    var rl=document.getElementById('repeatLast');
+    if(rl) rl.onclick=function(){
+      if(!s.items.length)return;
+      var last=s.items[s.items.length-1];
+      s.items.push({name:last.name,amt:+last.amt||0,t:Date.now()});
+      save(s); bumpStreak(); render(); track('add',{a:+last.amt||0,repeat:1});
+    };
     Array.prototype.forEach.call(document.querySelectorAll('[data-q]'),function(b){
       b.onclick=function(){var p=b.getAttribute('data-q').split('|');s.items.push({name:p[0],amt:+p[1],t:Date.now()});save(s);bumpStreak();render();track('add',{a:+p[1],quick:1});};
     });
