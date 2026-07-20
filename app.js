@@ -48,16 +48,17 @@
     var sc=st.count||0;
     var ready=!st.shieldLast||((new Date(dayKey(0))-new Date(st.shieldLast))/86400000)>=7;
     var sp=spent(), left=s.cap-sp, pct=s.cap?Math.min(100,Math.round(sp/s.cap*100)):0;
+    var today=dayKey(0); var todaySp=s.items.filter(function(it){var d=new Date(it.t||0);return dayKey(0)===(function(x){var d=new Date(x);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})(it.t||0);}).reduce(function(a,b){return a+(+b.amt||0);},0);
     root.innerHTML='<div class="card field1Finance" style="font-size:11px;color:#67e8f9">분야1위 · 투명 예산 · 정진 · 투자권유 아님</div>'
       +'<div class="card"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:6px">'
       +'<span class="chip">한도 <b>'+s.cap.toLocaleString()+'</b></span>'
       +'<span class="chip">사용 <b>'+pct+'%</b></span>'
       +'<span class="chip">🔥 '+sc+'일'+(sc>=3&&ready?' · 🛡️':'')+'</span>'
-      +'<span class="chip">리셋 '+fomoLeft()+'</span></div>'
+      +'<span class="chip">오늘 <b>'+todaySp.toLocaleString()+'</b></span>'+'<span class="chip">리셋 '+fomoLeft()+'</span></div>'
       +'<div class="bar"><i style="width:'+pct+'%;background:'+(pct>90?'var(--bad)':pct>70?'#fbbf24':'var(--ok)')+'"></i></div>'
       +'<div>남음 <b style="color:'+(left<0?'#f87171':'var(--gold)')+'">'+(left).toLocaleString()+'</b>원 · 항목 '+s.items.length+'</div></div>'
       +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button></div>'
-      +'<div class="card"><label class="sub">지출 추가</label><input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
+      +'<div class="card"><label class="sub">지출 추가</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">'+'<button class="sec" data-q="커피|4500">커피 4.5k</button>'+'<button class="sec" data-q="교통|1500">교통 1.5k</button>'+'<button class="sec" data-q="식사|12000">식사 12k</button>'+'<button class="sec" data-q="구독|9900">구독 9.9k</button></div>'+'<input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
       +'<div class="card"><b>이번 주 기록</b><div id="list"></div></div>'
       +'<div class="card" id="moneyPipe" style="text-align:center;font-size:12px">'
       +'<div style="color:#67e8f9;font-weight:700;margin-bottom:6px">💎 투명 금융 루프</div>'
@@ -79,6 +80,10 @@
       }).join('');
     }
     document.getElementById('setCap').onclick=function(){s.cap=+document.getElementById('cap').value||0;save(s);render();track('cap');};
+    Array.prototype.forEach.call(document.querySelectorAll('[data-q]'),function(b){
+      b.onclick=function(){var p=b.getAttribute('data-q').split('|');s.items.push({name:p[0],amt:+p[1],t:Date.now()});save(s);bumpStreak();render();track('add',{a:+p[1],quick:1});};
+    });
+
     document.getElementById('resetWeek').onclick=function(){if(confirm('이번 주 기록 지울까?')){s.items=[];save(s);render();}};
     document.getElementById('sh').onclick=function(){
       var sp2=spent();
