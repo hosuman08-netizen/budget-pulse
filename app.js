@@ -92,6 +92,7 @@
     var sc=st.count||0;
     var ready=!st.shieldLast||((new Date(dayKey(0))-new Date(st.shieldLast))/86400000)>=7;
     var sp=spent(), left=s.cap-sp, pct=s.cap?Math.min(100,Math.round(sp/s.cap*100)):0;
+    var day=new Date().getDay()||7; var remDays=Math.max(1,8-day); var paceTarget=Math.round(left/remDays);
     var softDaily=+(localStorage.getItem('bp_soft_daily')||Math.round((s.cap||300000)/7));
     var today=dayKey(0); var todaySp=s.items.filter(function(it){var d=new Date(it.t||0);return dayKey(0)===(function(x){var d=new Date(x);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})(it.t||0);}).reduce(function(a,b){return a+(+b.amt||0);},0);
     var wd=weekDays(); var maxD=Math.max.apply(null,wd.map(function(x){return x.a;}).concat([1]));
@@ -105,7 +106,7 @@
       +'</div>'
       +'<div class="card"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:6px">'
       +'<span class="chip">한도 <b>'+s.cap.toLocaleString()+'</b></span>'
-      +'<span class="chip">사용 <b>'+pct+'%</b></span>'
+      +'<span class="chip">사용 <b>'+pct+'%</b></span> <span class="chip">일페이스 <b>'+paceTarget.toLocaleString()+'</b></span>'
       +'<span class="chip">🔥 '+sc+'일'+(sc>=3&&ready?' · 🛡️':'')+'</span>'
       +'<span class="chip">오늘 <b>'+todaySp.toLocaleString()+'</b></span>'+'<span class="chip">일일soft <b>'+softDaily.toLocaleString()+'</b></span>'+(todaySp>softDaily?'<span class="chip" style="color:#f87171">⚠초과</span>':'<span class="chip">일일OK</span>')+'<span class="chip">자정 리셋 '+fomoLeft()+'</span></div>'
       +'<div class="bar"><i style="width:'+pct+'%;background:'+(pct>90?'var(--bad)':pct>70?'#fbbf24':'var(--ok)')+'"></i></div>'
