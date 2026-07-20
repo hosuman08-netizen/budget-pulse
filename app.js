@@ -36,6 +36,7 @@
   }
   var s=load();
   var root=document.getElementById('app');
+  var catFilter=localStorage.getItem('bp_cat_filter')||'';
   function spent(){return s.items.reduce(function(a,b){return a+(+b.amt||0);},0);}
   function catTotals(){
     var m={};
@@ -112,7 +113,7 @@
       +'<div style="margin-top:10px"><div class="sub" style="margin-bottom:4px">7일 일별 지출</div><div class="row" style="align-items:flex-end;gap:2px">'+spark+'</div></div></div>'
       +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button><label class="sub">일일 소프트 한도</label><input id="soft" type="number" value="'+softDaily+'"/><button class="sec" id="setSoft">일일 저장</button></div>'
       +'<div class="card"><label class="sub">지출 추가</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">'+'<button class="sec" data-q="커피|4500">커피 4.5k</button>'+'<button class="sec" data-q="교통|1500">교통 1.5k</button>'+'<button class="sec" data-q="식사|12000">식사 12k</button>'+'<button class="sec" data-q="구독|9900">구독 9.9k</button></div>'+'<input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
-      +'<div class="card"><b>이번 주 기록</b> <button class="sec" id="undoLast" style="float:right;padding:6px 10px;font-size:12px">↩ 직전 취소</button><div id="list"></div>'
+      +'<div class="card"><b>이번 주 기록</b>'+(catFilter?' <span class="chip" id="clrCat">필터: '+catFilter+' ×</span>':'')+' <button class="sec" id="undoLast" style="float:right;padding:6px 10px;font-size:12px">↩ 직전 취소</button><div id="list"></div>'
       +'<p class="sub" id="paceTip" style="margin-top:8px"></p></div>'
       +'<div class="card" id="moneyPipe" style="text-align:center;font-size:12px">'
       +'<div style="color:#67e8f9;font-weight:700;margin-bottom:6px">💎 투명 금융 루프</div>'
@@ -132,23 +133,35 @@
       var eb=document.getElementById('emptyAdd');
       if(eb) eb.onclick=function(){s.items.push({name:'커피',amt:4500,t:Date.now()});save(s);bumpStreak();render();track('add',{a:4500,sample:1});};
     }else{
-      list.innerHTML=s.items.slice().reverse().slice(0,20).map(function(it,idx){
-        var real=s.items.length-1-idx;
-        return '<div data-del="'+real+'" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2a2438;cursor:pointer"><span>'+it.name+' <small style="opacity:.5">탭삭제</small></span><b>'+(+it.amt).toLocaleString()+'</b></div>';
-      }).join('');
+      var rows=s.items.map(function(it,i){return {it:it,i:i};}).reverse();
+      if(catFilter) rows=rows.filter(function(r){return (r.it.name||'')===catFilter;});
+      list.innerHTML=rows.slice(0,20).map(function(r){
+        return '<div data-del="'+r.i+'" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2a2438;cursor:pointer"><span>'+r.it.name+' <small style="opacity:.5">탭삭제</small></span><b>'+(+r.it.amt).toLocaleString()+'</b></div>';
+      }).join('')||'<div class="sub">이 카테고리 항목 없음</div>';
       Array.prototype.forEach.call(list.querySelectorAll('[data-del]'),function(row){
         row.onclick=function(){var i=+row.getAttribute('data-del');s.items.splice(i,1);save(s);render();track('del');};
       });
     }
     var ub=document.getElementById('undoLast');
     if(ub) ub.onclick=function(){if(!s.items.length)return;s.items.pop();save(s);render();track('undo');};
+    var clr=document.getElementById('clrCat');
+    if(clr) clr.onclick=function(){catFilter=''; localStorage.removeItem('bp_cat_filter'); render();};
     var cats=document.getElementById('cats');
     if(cats){
       var tops=catTotals().slice(0,5);
       cats.innerHTML=tops.length?tops.map(function(c){
         var p=sp?Math.round(c.a/sp*100):0;
-        return '<div style="display:flex;justify-content:space-between;padding:3px 0"><span>'+c.n+'</span><b>'+c.a.toLocaleString()+' ('+p+'%)</b></div>';
-      }).join(''):'항목 추가 시 자동 집계';
+        var on=catFilter===c.n;
+        return '<div data-cat="'+c.n+'" style="display:flex;justify-content:space-between;padding:4px 0;cursor:pointer;border-radius:6px'+(on?';background:#67e8f922':'')+'"><span>'+c.n+(on?' ✓':'')+'</span><b>'+c.a.toLocaleString()+' ('+p+'%)</b></div>';
+      }).join('')+'<p class="sub" style="margin-top:4px">탭하면 해당 카테고리만 필터</p>':'항목 추가 시 자동 집계';
+      Array.prototype.forEach.call(cats.querySelectorAll('[data-cat]'),function(row){
+        row.onclick=function(){
+          var n=row.getAttribute('data-cat');
+          catFilter=(catFilter===n)?'':n;
+          if(catFilter) localStorage.setItem('bp_cat_filter',catFilter); else localStorage.removeItem('bp_cat_filter');
+          render(); track('cat_filter',{n:catFilter||'all'});
+        };
+      });
     }
     var pt=document.getElementById('paceTip');
     if(pt){
@@ -157,7 +170,8 @@
       var pace=Math.round(Math.max(0,left)/leftDays);
       var dayPace=Math.round(s.cap/7);
       var over=todaySp>dayPace;
-      pt.textContent='남은 일수 기준 일일 여유 ≈ '+pace.toLocaleString()+'원 · 오늘 사용 '+todaySp.toLocaleString()+'원'+(over?' · ⚠ 일평균('+dayPace.toLocaleString()+') 초과':' · 일평균 페이스 OK');
+      var weekAvg=Math.round(wd.reduce(function(a,b){return a+b.a;},0)/7);
+      pt.textContent='남은 일수 기준 일일 여유 ≈ '+pace.toLocaleString()+'원 · 오늘 '+todaySp.toLocaleString()+'원 · 7일 평균 '+weekAvg.toLocaleString()+'원'+(over?' · ⚠ 일평균('+dayPace.toLocaleString()+') 초과':' · 일평균 페이스 OK');
     }
     var ej=document.getElementById('exportJson');
     if(ej) ej.onclick=exportJSON;
