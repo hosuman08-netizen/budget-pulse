@@ -203,10 +203,16 @@
     document.getElementById('resetWeek').onclick=function(){if(confirm('이번 주 기록 지울까?')){s.items=[];save(s);render();}};
     document.getElementById('sh').onclick=function(){
       var sp2=spent();
-      var text='Budget Pulse '+sp2.toLocaleString()+'/'+s.cap.toLocaleString()+' · 투명 예산(로컬)\n'+shareUrl();
+      var wd2=weekDays();
+      var weekAvg2=Math.round(wd2.reduce(function(a,b){return a+b.a;},0)/7);
+      var tops2=catTotals();
+      var topN=tops2.length?tops2[0].n+' '+tops2[0].a.toLocaleString()+'원':'—';
+      var text='Budget Pulse '+sp2.toLocaleString()+'/'+s.cap.toLocaleString()
+        +' · 7일평균 '+weekAvg2.toLocaleString()+'원 · TOP '+topN
+        +'\n투명 금융(로컬 전용 · 투자권유 아님)\n'+shareUrl();
       if(navigator.share) navigator.share({text:text,url:shareUrl()}).catch(function(){});
       else if(navigator.clipboard){navigator.clipboard.writeText(text); alert('복사됨');}
-      try{legionTrack('share_peak',{})}catch(e){}
+      try{legionTrack('share_peak',{top:tops2.length?tops2[0].n:''})}catch(e){}
     };
     document.getElementById('add').onclick=function(){
       var n=document.getElementById('name').value||'지출', a=+document.getElementById('amt').value||0;
