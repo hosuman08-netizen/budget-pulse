@@ -59,7 +59,8 @@
       +'<div>남음 <b style="color:'+(left<0?'#f87171':'var(--gold)')+'">'+(left).toLocaleString()+'</b>원 · 항목 '+s.items.length+'</div></div>'
       +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button></div>'
       +'<div class="card"><label class="sub">지출 추가</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">'+'<button class="sec" data-q="커피|4500">커피 4.5k</button>'+'<button class="sec" data-q="교통|1500">교통 1.5k</button>'+'<button class="sec" data-q="식사|12000">식사 12k</button>'+'<button class="sec" data-q="구독|9900">구독 9.9k</button></div>'+'<input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
-      +'<div class="card"><b>이번 주 기록</b><div id="list"></div></div>'
+      +'<div class="card"><b>이번 주 기록</b> <button class="sec" id="undoLast" style="float:right;padding:6px 10px;font-size:12px">↩ 직전 취소</button><div id="list"></div>'
+      +'<p class="sub" id="paceTip" style="margin-top:8px"></p></div>'
       +'<div class="card" id="moneyPipe" style="text-align:center;font-size:12px">'
       +'<div style="color:#67e8f9;font-weight:700;margin-bottom:6px">💎 투명 금융 루프</div>'
       +'<p class="sub" style="margin:0 0 8px">로컬 계산만 · 투자권유 아님 · 엔터 앱과 트랙 분리</p>'
@@ -75,9 +76,22 @@
       var eb=document.getElementById('emptyAdd');
       if(eb) eb.onclick=function(){s.items.push({name:'커피',amt:4500,t:Date.now()});save(s);bumpStreak();render();track('add',{a:4500,sample:1});};
     }else{
-      list.innerHTML=s.items.slice().reverse().slice(0,20).map(function(it){
-        return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2a2438"><span>'+it.name+'</span><b>'+(+it.amt).toLocaleString()+'</b></div>';
+      list.innerHTML=s.items.slice().reverse().slice(0,20).map(function(it,idx){
+        var real=s.items.length-1-idx;
+        return '<div data-del="'+real+'" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2a2438;cursor:pointer"><span>'+it.name+' <small style="opacity:.5">탭삭제</small></span><b>'+(+it.amt).toLocaleString()+'</b></div>';
       }).join('');
+      Array.prototype.forEach.call(list.querySelectorAll('[data-del]'),function(row){
+        row.onclick=function(){var i=+row.getAttribute('data-del');s.items.splice(i,1);save(s);render();track('del');};
+      });
+    }
+    var ub=document.getElementById('undoLast');
+    if(ub) ub.onclick=function(){if(!s.items.length)return;s.items.pop();save(s);render();track('undo');};
+    var pt=document.getElementById('paceTip');
+    if(pt){
+      var day=new Date().getDay()||7; // 1-7 Mon-Sun-ish
+      var leftDays=Math.max(1,8-day);
+      var pace=Math.round(Math.max(0,left)/leftDays);
+      pt.textContent='남은 일수 기준 일일 여유 ≈ '+pace.toLocaleString()+'원 · 오늘 사용 '+todaySp.toLocaleString()+'원';
     }
     document.getElementById('setCap').onclick=function(){s.cap=+document.getElementById('cap').value||0;save(s);render();track('cap');};
     Array.prototype.forEach.call(document.querySelectorAll('[data-q]'),function(b){
