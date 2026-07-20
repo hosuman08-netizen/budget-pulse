@@ -53,6 +53,33 @@
     setTimeout(function(){URL.revokeObjectURL(a.href);},1500);
     try{legionTrack('export',{n:s.items.length})}catch(e){}
   }
+  function importJSON(file){
+    if(!file)return;
+    var r=new FileReader();
+    r.onload=function(){
+      try{
+        var p=JSON.parse(r.result);
+        if(!p||typeof p!=='object') throw new Error('bad');
+        if(typeof p.cap==='number'&&p.cap>0)s.cap=p.cap;
+        if(Array.isArray(p.items))s.items=p.items.filter(function(it){return it&&(+it.amt||0)>0;}).slice(0,500);
+        save(s); render(); track('import',{n:s.items.length});
+      }catch(e){alert('JSON 형식을 확인해 주세요 (export 파일 권장)');}
+    };
+    r.readAsText(file);
+  }
+  function weekDays(){
+    var out=[];
+    for(var i=6;i>=0;i--){
+      var k=dayKey(-i), sum=0;
+      s.items.forEach(function(it){
+        var d=new Date(it.t||0);
+        var dk=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        if(dk===k) sum+=(+it.amt||0);
+      });
+      out.push({k:k.slice(5),a:sum});
+    }
+    return out;
+  }
   function fomoLeft(){
     var end=new Date(); end.setHours(24,0,0,0);
     var ms=Math.max(0,end-Date.now());
@@ -65,14 +92,23 @@
     var ready=!st.shieldLast||((new Date(dayKey(0))-new Date(st.shieldLast))/86400000)>=7;
     var sp=spent(), left=s.cap-sp, pct=s.cap?Math.min(100,Math.round(sp/s.cap*100)):0;
     var today=dayKey(0); var todaySp=s.items.filter(function(it){var d=new Date(it.t||0);return dayKey(0)===(function(x){var d=new Date(x);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})(it.t||0);}).reduce(function(a,b){return a+(+b.amt||0);},0);
-    root.innerHTML='<div class="card field1Finance" style="font-size:11px;color:#67e8f9">분야1위 · 투명 예산 · 정진 · 투자권유 아님</div>'
+    var wd=weekDays(); var maxD=Math.max.apply(null,wd.map(function(x){return x.a;}).concat([1]));
+    var spark=wd.map(function(d){
+      var h=Math.max(4,Math.round(28*(d.a/maxD)));
+      return '<div style="flex:1;text-align:center"><div title="'+d.a.toLocaleString()+'" style="height:28px;display:flex;align-items:flex-end;justify-content:center"><i style="display:block;width:70%;height:'+h+'px;border-radius:3px 3px 0 0;background:'+(d.a?'#67e8f9':'#2a2438')+'"></i></div><div style="font-size:9px;opacity:.6;margin-top:2px">'+d.k.slice(3)+'</div></div>';
+    }).join('');
+    root.innerHTML='<div class="card field1Finance" style="font-size:11px;line-height:1.5;border-color:#67e8f955;background:#0e1620">'
+      +'<b style="color:#67e8f9">투명 금융 트랙 · dual-track</b><br>'
+      +'로컬 전용 기록 도구입니다. 투자 권유·수익률 약속· ent 가챠 없음. 엔터테인먼트 앱과 트랙 분리.'
+      +'</div>'
       +'<div class="card"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:6px">'
       +'<span class="chip">한도 <b>'+s.cap.toLocaleString()+'</b></span>'
       +'<span class="chip">사용 <b>'+pct+'%</b></span>'
       +'<span class="chip">🔥 '+sc+'일'+(sc>=3&&ready?' · 🛡️':'')+'</span>'
-      +'<span class="chip">오늘 <b>'+todaySp.toLocaleString()+'</b></span>'+'<span class="chip">리셋 '+fomoLeft()+'</span></div>'
+      +'<span class="chip">오늘 <b>'+todaySp.toLocaleString()+'</b></span>'+'<span class="chip">자정 리셋 '+fomoLeft()+'</span></div>'
       +'<div class="bar"><i style="width:'+pct+'%;background:'+(pct>90?'var(--bad)':pct>70?'#fbbf24':'var(--ok)')+'"></i></div>'
-      +'<div>남음 <b style="color:'+(left<0?'#f87171':'var(--gold)')+'">'+(left).toLocaleString()+'</b>원 · 항목 '+s.items.length+'</div></div>'
+      +'<div>남음 <b style="color:'+(left<0?'#f87171':'var(--gold)')+'">'+(left).toLocaleString()+'</b>원 · 항목 '+s.items.length+'</div>'
+      +'<div style="margin-top:10px"><div class="sub" style="margin-bottom:4px">7일 일별 지출</div><div class="row" style="align-items:flex-end;gap:2px">'+spark+'</div></div></div>'
       +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button></div>'
       +'<div class="card"><label class="sub">지출 추가</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">'+'<button class="sec" data-q="커피|4500">커피 4.5k</button>'+'<button class="sec" data-q="교통|1500">교통 1.5k</button>'+'<button class="sec" data-q="식사|12000">식사 12k</button>'+'<button class="sec" data-q="구독|9900">구독 9.9k</button></div>'+'<input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
       +'<div class="card"><b>이번 주 기록</b> <button class="sec" id="undoLast" style="float:right;padding:6px 10px;font-size:12px">↩ 직전 취소</button><div id="list"></div>'
@@ -87,6 +123,7 @@
       +'<div class="card" id="catBox"><b>카테고리 TOP</b><div id="cats" class="sub" style="margin-top:6px"></div></div>'
       +'<button id="sh" style="width:100%;margin-top:8px;padding:11px;border:0;border-radius:10px;background:#1c1826;color:#ece8f1;font-weight:700">주간 보드 공유</button>'
       +'<button id="exportJson" style="width:100%;margin-top:8px;padding:11px;border:0;border-radius:10px;background:#1c1826;color:#ece8f1">⬇ JSON 백업</button>'
+      +'<label id="importLbl" style="display:block;width:100%;margin-top:8px;padding:11px;border:0;border-radius:10px;background:#1c1826;color:#ece8f1;text-align:center;cursor:pointer;font-weight:600">⬆ JSON 복원<input id="importJson" type="file" accept="application/json,.json" style="display:none"/></label>'
       +'<button id="resetWeek" style="width:100%;margin-top:8px;padding:11px;border:0;border-radius:10px;background:#1c1826;color:#ece8f1">주간 기록 초기화</button>';
     var list=document.getElementById('list');
     if(!s.items.length){
@@ -123,6 +160,8 @@
     }
     var ej=document.getElementById('exportJson');
     if(ej) ej.onclick=exportJSON;
+    var ij=document.getElementById('importJson');
+    if(ij) ij.onchange=function(){if(ij.files&&ij.files[0])importJSON(ij.files[0]); ij.value='';};
     document.getElementById('setCap').onclick=function(){s.cap=+document.getElementById('cap').value||0;save(s);render();track('cap');};
     Array.prototype.forEach.call(document.querySelectorAll('[data-q]'),function(b){
       b.onclick=function(){var p=b.getAttribute('data-q').split('|');s.items.push({name:p[0],amt:+p[1],t:Date.now()});save(s);bumpStreak();render();track('add',{a:+p[1],quick:1});};
