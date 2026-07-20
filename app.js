@@ -178,6 +178,8 @@
     var ij=document.getElementById('importJson');
     if(ij) ij.onchange=function(){if(ij.files&&ij.files[0])importJSON(ij.files[0]); ij.value='';};
     document.getElementById('setCap').onclick=function(){s.cap=+document.getElementById('cap').value||0;save(s);render();track('cap');};
+    var ss=document.getElementById('setSoft');
+    if(ss) ss.onclick=function(){var v=+document.getElementById('soft').value||0;localStorage.setItem('bp_soft_daily',String(v));render();track('soft',{v:v});};
     Array.prototype.forEach.call(document.querySelectorAll('[data-q]'),function(b){
       b.onclick=function(){var p=b.getAttribute('data-q').split('|');s.items.push({name:p[0],amt:+p[1],t:Date.now()});save(s);bumpStreak();render();track('add',{a:+p[1],quick:1});};
     });
