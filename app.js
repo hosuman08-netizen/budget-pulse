@@ -19,6 +19,12 @@
       return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2a2438"><span>'+it.name+'</span><b>'+(+it.amt).toLocaleString()+'</b></div>';
     }).join('')||'<span class="sub">아직 없음</span>';
     document.getElementById('setCap').onclick=function(){s.cap=+document.getElementById('cap').value||0;save(s);render();track('cap');};
+    if(!document.getElementById('resetWeek')){
+      var rb=document.createElement('button'); rb.id='resetWeek'; rb.textContent='주간 기록 초기화';
+      rb.style.cssText='width:100%;margin-top:8px;padding:11px;border:0;border-radius:10px;background:#1c1826;color:#ece8f1';
+      rb.onclick=function(){if(confirm('이번 주 기록 지울까?')){s.items=[];save(s);render();}};
+      root.appendChild(rb);
+    }
     if(!document.getElementById('sh')){
       var b=document.createElement('button'); b.id='sh'; b.style.cssText='width:100%;margin-top:8px;padding:11px;border:0;border-radius:10px;background:#1c1826;color:#ece8f1;font-weight:700'; b.style.width='100%'; b.style.marginTop='8px'; b.textContent='주간 보드 공유';
       b.onclick=function(){var sp=spent(); var text='Budget Pulse '+sp.toLocaleString()+'/'+s.cap.toLocaleString()+' · https://hosuman08-netizen.github.io/budget-pulse/';
