@@ -37,6 +37,22 @@
   var s=load();
   var root=document.getElementById('app');
   function spent(){return s.items.reduce(function(a,b){return a+(+b.amt||0);},0);}
+  function catTotals(){
+    var m={};
+    s.items.forEach(function(it){
+      var n=(it.name||'기타').trim()||'기타';
+      m[n]=(m[n]||0)+(+it.amt||0);
+    });
+    return Object.keys(m).map(function(k){return {n:k,a:m[k]};}).sort(function(a,b){return b.a-a.a;});
+  }
+  function exportJSON(){
+    var payload={cap:s.cap,items:s.items,exportedAt:new Date().toISOString(),app:'budget-pulse'};
+    var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='budget-pulse-'+dayKey(0)+'.json'; a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);},1500);
+    try{legionTrack('export',{n:s.items.length})}catch(e){}
+  }
   function fomoLeft(){
     var end=new Date(); end.setHours(24,0,0,0);
     var ms=Math.max(0,end-Date.now());
@@ -68,7 +84,9 @@
       +'<a style="color:#ece8f1;margin:0 6px" href="https://hosuman08-netizen.github.io/cost-basis/?utm_source=budget&utm_medium=pipe">🧮 Cost Basis</a>'
       +'<a style="color:#e0b552;margin:0 6px" href="https://hosuman08-netizen.github.io/legion-hub/?utm_source=budget&utm_medium=pipe">🎮 Arcade</a>'
       +'</div>'
+      +'<div class="card" id="catBox"><b>카테고리 TOP</b><div id="cats" class="sub" style="margin-top:6px"></div></div>'
       +'<button id="sh" style="width:100%;margin-top:8px;padding:11px;border:0;border-radius:10px;background:#1c1826;color:#ece8f1;font-weight:700">주간 보드 공유</button>'
+      +'<button id="exportJson" style="width:100%;margin-top:8px;padding:11px;border:0;border-radius:10px;background:#1c1826;color:#ece8f1">⬇ JSON 백업</button>'
       +'<button id="resetWeek" style="width:100%;margin-top:8px;padding:11px;border:0;border-radius:10px;background:#1c1826;color:#ece8f1">주간 기록 초기화</button>';
     var list=document.getElementById('list');
     if(!s.items.length){
@@ -86,13 +104,25 @@
     }
     var ub=document.getElementById('undoLast');
     if(ub) ub.onclick=function(){if(!s.items.length)return;s.items.pop();save(s);render();track('undo');};
+    var cats=document.getElementById('cats');
+    if(cats){
+      var tops=catTotals().slice(0,5);
+      cats.innerHTML=tops.length?tops.map(function(c){
+        var p=sp?Math.round(c.a/sp*100):0;
+        return '<div style="display:flex;justify-content:space-between;padding:3px 0"><span>'+c.n+'</span><b>'+c.a.toLocaleString()+' ('+p+'%)</b></div>';
+      }).join(''):'항목 추가 시 자동 집계';
+    }
     var pt=document.getElementById('paceTip');
     if(pt){
       var day=new Date().getDay()||7; // 1-7 Mon-Sun-ish
       var leftDays=Math.max(1,8-day);
       var pace=Math.round(Math.max(0,left)/leftDays);
-      pt.textContent='남은 일수 기준 일일 여유 ≈ '+pace.toLocaleString()+'원 · 오늘 사용 '+todaySp.toLocaleString()+'원';
+      var dayPace=Math.round(s.cap/7);
+      var over=todaySp>dayPace;
+      pt.textContent='남은 일수 기준 일일 여유 ≈ '+pace.toLocaleString()+'원 · 오늘 사용 '+todaySp.toLocaleString()+'원'+(over?' · ⚠ 일평균('+dayPace.toLocaleString()+') 초과':' · 일평균 페이스 OK');
     }
+    var ej=document.getElementById('exportJson');
+    if(ej) ej.onclick=exportJSON;
     document.getElementById('setCap').onclick=function(){s.cap=+document.getElementById('cap').value||0;save(s);render();track('cap');};
     Array.prototype.forEach.call(document.querySelectorAll('[data-q]'),function(b){
       b.onclick=function(){var p=b.getAttribute('data-q').split('|');s.items.push({name:p[0],amt:+p[1],t:Date.now()});save(s);bumpStreak();render();track('add',{a:+p[1],quick:1});};
