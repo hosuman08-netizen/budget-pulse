@@ -55,7 +55,7 @@
       +'<span class="chip">🔥 '+sc+'일'+(sc>=3&&ready?' · 🛡️':'')+'</span>'
       +'<span class="chip">리셋 '+fomoLeft()+'</span></div>'
       +'<div class="bar"><i style="width:'+pct+'%;background:'+(pct>90?'var(--bad)':pct>70?'#fbbf24':'var(--ok)')+'"></i></div>'
-      +'<div>남음 <b style="color:'+(left<0?'#f87171':'var(--gold)')+">'+(left).toLocaleString()+'</b>원 · 항목 '+s.items.length+'</div></div>'
+      +'<div>남음 <b style="color:'+(left<0?'#f87171':'var(--gold)')+'">'+(left).toLocaleString()+'</b>원 · 항목 '+s.items.length+'</div></div>'
       +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button></div>'
       +'<div class="card"><label class="sub">지출 추가</label><input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
       +'<div class="card"><b>이번 주 기록</b><div id="list"></div></div>'
