@@ -86,6 +86,30 @@
     }
     return out;
   }
+  function monthPace(){
+    var now=new Date();
+    var y=now.getFullYear(), m=now.getMonth();
+    var dim=new Date(y,m+1,0).getDate();
+    var dom=now.getDate();
+    var rem=Math.max(1,dim-dom+1);
+    var mSpend=0;
+    s.items.forEach(function(it){
+      var d=new Date(it.t||0);
+      if(d.getFullYear()===y && d.getMonth()===m) mSpend+=(+it.amt||0);
+    });
+    var mtdPace=Math.round(mSpend/dom);
+    var proj=mtdPace*dim;
+    return {dim:dim,dom:dom,rem:rem,mSpend:mSpend,mtdPace:mtdPace,proj:proj};
+  }
+  function recentNames(){
+    var seen={}, out=[];
+    for(var i=s.items.length-1;i>=0 && out.length<4;i--){
+      var n=(s.items[i].name||'').trim();
+      if(!n||seen[n]) continue;
+      seen[n]=1; out.push({n:n,a:+s.items[i].amt||0});
+    }
+    return out;
+  }
   function fomoLeft(){
     var end=new Date(); end.setHours(24,0,0,0);
     var ms=Math.max(0,end-Date.now());
@@ -118,9 +142,9 @@
       +'<div>남음 <b style="color:'+(left<0?'#f87171':'var(--gold)')+'">'+(left).toLocaleString()+'</b>원 · 항목 '+s.items.length+'</div>'
       +'<div style="margin-top:10px"><div class="sub" style="margin-bottom:4px">7일 일별 지출</div><div class="row" style="align-items:flex-end;gap:2px">'+spark+'</div></div></div>'
       +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button><label class="sub">일일 소프트 한도</label><input id="soft" type="number" value="'+softDaily+'"/><button class="sec" id="setSoft">일일 저장</button></div>'
-      +'<div class="card"><label class="sub">지출 추가</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">'+'<button class="sec" data-q="커피|4500">커피 4.5k</button>'+'<button class="sec" data-q="교통|1500">교통 1.5k</button>'+'<button class="sec" data-q="식사|12000">식사 12k</button>'+'<button class="sec" data-q="구독|9900">구독 9.9k</button>'+(s.items.length?'<button class="sec" id="repeatLast">↩ 직전 재추가</button>':'')+'</div>'+'<input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
+      +'<div class="card"><label class="sub">지출 추가</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">'+'<button class="sec" data-q="커피|4500">커피 4.5k</button>'+'<button class="sec" data-q="교통|1500">교통 1.5k</button>'+'<button class="sec" data-q="식사|12000">식사 12k</button>'+'<button class="sec" data-q="구독|9900">구독 9.9k</button>'+(s.items.length?'<button class="sec" id="repeatLast">↩ 직전 재추가</button>':'')+recentNames().map(function(r){return '<button class="sec" data-q="'+r.n+'|'+r.a+'">↻ '+r.n+'</button>';}).join('')+'</div>'+'<input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
       +'<div class="card"><b>이번 주 기록</b>'+(catFilter?' <span class="chip" id="clrCat">필터: '+catFilter+' ×</span>':'')+' <button class="sec" id="undoLast" style="float:right;padding:6px 10px;font-size:12px">↩ 직전 취소</button><div id="list"></div>'
-      +'<p class="sub" id="paceTip" style="margin-top:8px"></p></div>'
+      +'<p class="sub" id="paceTip" style="margin-top:8px"></p><p class="sub" id="monthTip" style="margin-top:4px"></p></div>'
       +'<div class="card" id="moneyPipe" style="text-align:center;font-size:12px">'
       +'<div style="color:#67e8f9;font-weight:700;margin-bottom:6px">💎 투명 금융 루프</div>'
       +'<p class="sub" style="margin:0 0 8px">로컬 계산만 · 투자권유 아님 · 엔터 앱과 트랙 분리</p>'
@@ -181,6 +205,11 @@
       var top1=tops.length?tops[0]:null;
       var vs=weekAvg?(todaySp>weekAvg?' · 오늘>7일평균':' · 오늘≤7일평균'):'';
       pt.textContent='남은 일수 기준 일일 여유 ≈ '+pace.toLocaleString()+'원 · 오늘 '+todaySp.toLocaleString()+'원 · 7일 평균 '+weekAvg.toLocaleString()+'원'+vs+(over?' · ⚠ 일평균('+dayPace.toLocaleString()+') 초과':' · 일평균 페이스 OK')+(top1?' · 최대항목 '+top1.n+' '+top1.a.toLocaleString()+'원':'');
+    }
+    var mt=document.getElementById('monthTip');
+    if(mt){
+      var mp=monthPace();
+      mt.textContent='월누적 '+mp.mSpend.toLocaleString()+'원 · 일평균 '+mp.mtdPace.toLocaleString()+' · 월말 추정 '+mp.proj.toLocaleString()+'원 · 남은 '+mp.rem+'일 · 한도 대비 월추정 '+(s.cap?Math.round(mp.proj/s.cap*100):0)+'%';
     }
     var ej=document.getElementById('exportJson');
     if(ej) ej.onclick=exportJSON;
