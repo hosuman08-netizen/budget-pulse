@@ -91,6 +91,7 @@
     var sc=st.count||0;
     var ready=!st.shieldLast||((new Date(dayKey(0))-new Date(st.shieldLast))/86400000)>=7;
     var sp=spent(), left=s.cap-sp, pct=s.cap?Math.min(100,Math.round(sp/s.cap*100)):0;
+    var softDaily=+(localStorage.getItem('bp_soft_daily')||Math.round((s.cap||300000)/7));
     var today=dayKey(0); var todaySp=s.items.filter(function(it){var d=new Date(it.t||0);return dayKey(0)===(function(x){var d=new Date(x);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})(it.t||0);}).reduce(function(a,b){return a+(+b.amt||0);},0);
     var wd=weekDays(); var maxD=Math.max.apply(null,wd.map(function(x){return x.a;}).concat([1]));
     var spark=wd.map(function(d){
@@ -105,11 +106,11 @@
       +'<span class="chip">한도 <b>'+s.cap.toLocaleString()+'</b></span>'
       +'<span class="chip">사용 <b>'+pct+'%</b></span>'
       +'<span class="chip">🔥 '+sc+'일'+(sc>=3&&ready?' · 🛡️':'')+'</span>'
-      +'<span class="chip">오늘 <b>'+todaySp.toLocaleString()+'</b></span>'+'<span class="chip">자정 리셋 '+fomoLeft()+'</span></div>'
+      +'<span class="chip">오늘 <b>'+todaySp.toLocaleString()+'</b></span>'+'<span class="chip">일일soft <b>'+softDaily.toLocaleString()+'</b></span>'+(todaySp>softDaily?'<span class="chip" style="color:#f87171">⚠초과</span>':'<span class="chip">일일OK</span>')+'<span class="chip">자정 리셋 '+fomoLeft()+'</span></div>'
       +'<div class="bar"><i style="width:'+pct+'%;background:'+(pct>90?'var(--bad)':pct>70?'#fbbf24':'var(--ok)')+'"></i></div>'
       +'<div>남음 <b style="color:'+(left<0?'#f87171':'var(--gold)')+'">'+(left).toLocaleString()+'</b>원 · 항목 '+s.items.length+'</div>'
       +'<div style="margin-top:10px"><div class="sub" style="margin-bottom:4px">7일 일별 지출</div><div class="row" style="align-items:flex-end;gap:2px">'+spark+'</div></div></div>'
-      +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button></div>'
+      +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button><label class="sub">일일 소프트 한도</label><input id="soft" type="number" value="'+softDaily+'"/><button class="sec" id="setSoft">일일 저장</button></div>'
       +'<div class="card"><label class="sub">지출 추가</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">'+'<button class="sec" data-q="커피|4500">커피 4.5k</button>'+'<button class="sec" data-q="교통|1500">교통 1.5k</button>'+'<button class="sec" data-q="식사|12000">식사 12k</button>'+'<button class="sec" data-q="구독|9900">구독 9.9k</button></div>'+'<input id="name" placeholder="항목 (커피, 교통…)"/><input id="amt" type="number" placeholder="금액"/><button id="add">추가</button></div>'
       +'<div class="card"><b>이번 주 기록</b> <button class="sec" id="undoLast" style="float:right;padding:6px 10px;font-size:12px">↩ 직전 취소</button><div id="list"></div>'
       +'<p class="sub" id="paceTip" style="margin-top:8px"></p></div>'
