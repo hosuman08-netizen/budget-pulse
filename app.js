@@ -225,4 +225,7 @@
   }catch(e){}
   track('session_start');
   render();
+
+/* LEGION_WAVE_33_share_counter */
+document.addEventListener('click',function(ev){try{var el=ev.target;if(!el)return;var tx=(el.textContent||'')+(el.id||'');if(/share|copy/i.test(tx)||/\uacf5\uc720|\ubcf5\uc0ac/.test(tx)){localStorage.setItem('lw_p39_budget_p_share_counter',String((+(localStorage.getItem('lw_p39_budget_p_share_counter')||0))+1));}}catch(e){}},true);
 })();
