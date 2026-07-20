@@ -134,6 +134,7 @@
       +'로컬 전용 기록 도구입니다. 투자 권유·수익률 약속· ent 가챠 없음. 엔터테인먼트 앱과 트랙 분리.'
       +'</div>'
       +'<div class="card"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:6px">'
+      +'<span class="chip">'+weekLabel()+'</span>'
       +'<span class="chip">한도 <b>'+s.cap.toLocaleString()+'</b></span>'
       +'<span class="chip">사용 <b>'+pct+'%</b></span> <span class="chip">일페이스 <b>'+paceTarget.toLocaleString()+'</b></span>'
       +'<span class="chip">🔥 '+sc+'일'+(sc>=3&&ready?' · 🛡️':'')+'</span>'
