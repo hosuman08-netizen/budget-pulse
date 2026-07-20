@@ -8,7 +8,7 @@
   function spent(){return s.items.reduce(function(a,b){return a+(+b.amt||0);},0);}
   function render(){
     var sp=spent(), left=s.cap-sp, pct=s.cap?Math.min(100,Math.round(sp/s.cap*100)):0;
-    root.innerHTML='<div class="card"><div class="row" style="justify-content:space-between"><span class="chip">한도 <b>'+s.cap.toLocaleString()+'</b></span><span class="chip">사용 <b>'+pct+'%</b></span></div>'
+    root.innerHTML='<div class="card field1Finance" style="font-size:11px;color:#67e8f9">분야1위 목표 · 투명 예산 · 투자권유 아님</div><div class="card"><div class="row" style="justify-content:space-between"><span class="chip">한도 <b>'+s.cap.toLocaleString()+'</b></span><span class="chip">사용 <b>'+pct+'%</b></span></div>'
       +'<div class="bar"><i style="width:'+pct+'%;background:'+(pct>90?'var(--bad)':pct>70?'#fbbf24':'var(--ok)')+'"></i></div>'
       +'<div>남음 <b style="color:var(--gold)">'+(left).toLocaleString()+'</b>원</div></div>'
       +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button></div>'
