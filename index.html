@@ -27,5 +27,8 @@ footer{text-align:center;color:var(--dim);font-size:11px;margin-top:24px}
 <script>window.LEGION_APP='budget-pulse';window.LEGION_ANALYTICS_URL='https://legion-analytics.hoyashi95.workers.dev';</script>
 <script src="legion-beacon.js"></script>
 <script src="app.js"></script>
+
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}</script>
+
 </body>
 </html>
