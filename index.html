@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Budget Pulse · Transparent</title>
+<style>
+:root{--bg:#0b0a10;--surf:#15131d;--gold:#e0b552;--cyan:#67e8f9;--dim:#8a8398;--txt:#ece8f1}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;padding:20px 16px 48px;line-height:1.45}
+h1{color:var(--gold);font-size:1.35rem}
+.sub{color:var(--dim);font-size:12px;margin:6px 0 14px}
+.card{background:var(--surf);border:1px solid #2a2438;border-radius:14px;padding:14px;margin:10px 0}
+.disclaimer{border-color:#67e8f9;font-size:12px;color:var(--cyan)}
+button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--gold);color:#111;font-weight:800;cursor:pointer}
+input,textarea{width:100%;background:#0e0c14;border:1px solid #2a2438;border-radius:10px;color:var(--txt);padding:10px;margin:6px 0}
+.money{color:var(--cyan);font-size:13px;margin-top:8px}
+footer{text-align:center;color:var(--dim);font-size:11px;margin-top:24px}
+</style>
+</head>
+<body>
+<p class="sub">p39-budget-pulse · Wave B · Transparent finance tool</p>
+<h1>Budget Pulse</h1>
+<div class="card disclaimer"><b>고지:</b> 투자 권유·일임·수익 보장 아님. 교육/기록 도구. 허위 AUM 금지. 본인 판단·책임.</div>
+<div class="card"><p>주간 예산 맥박·샌는 돈 기록.</p><p class="money">💰 구독</p></div>
+<div class="card" id="tool"></div>
+<footer>Transparent · Not financial advice · Legion Wave B</footer>
+<script>window.LEGION_APP='budget-pulse';window.LEGION_ANALYTICS_URL='https://legion-analytics.hoyashi95.workers.dev';</script>
+<script src="legion-beacon.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
