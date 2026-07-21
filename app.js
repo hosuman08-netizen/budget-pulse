@@ -43,6 +43,10 @@
     var cut=Date.now()-7*864e5;
     return s.items.reduce(function(a,it){return a+((it.t||0)>=cut?(+it.amt||0):0);},0);
   }
+  function prevWeekSpend(){
+    var cut0=Date.now()-14*864e5, cut1=Date.now()-7*864e5;
+    return s.items.reduce(function(a,it){var t=it.t||0; return a+(t>=cut0&&t<cut1?(+it.amt||0):0);},0);
+  }
   function catTotals(){
     var m={};
     s.items.forEach(function(it){
@@ -122,8 +126,9 @@
     var ready=!st.shieldLast||((new Date(dayKey(0))-new Date(st.shieldLast))/86400000)>=7;
     var sp=spent(), left=s.cap-sp, pct=s.cap?Math.min(100,Math.round(sp/s.cap*100)):0;
     var day=new Date().getDay()||7; var remDays=Math.max(1,8-day); var paceTarget=Math.round(left/remDays);
-    var softDaily=+(localStorage.getItem('bp_soft_daily')||Math.round((s.cap||300000)/7)); var wSpend=weekSpend(); var wLeft=s.cap-wSpend;
+    var softDaily=+(localStorage.getItem('bp_soft_daily')||Math.round((s.cap||300000)/7)); var wSpend=weekSpend(); var pSpend=prevWeekSpend(); var wDelta=wSpend-pSpend; var wLeft=s.cap-wSpend;
     var today=dayKey(0); var todaySp=s.items.filter(function(it){var d=new Date(it.t||0);return dayKey(0)===(function(x){var d=new Date(x);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})(it.t||0);}).reduce(function(a,b){return a+(+b.amt||0);},0);
+    var softPct=softDaily?Math.min(100,Math.round(todaySp/softDaily*100)):0;
     var wd=weekDays(); var maxD=Math.max.apply(null,wd.map(function(x){return x.a;}).concat([1]));
     var spark=wd.map(function(d){
       var h=Math.max(4,Math.round(28*(d.a/maxD)));
@@ -138,8 +143,10 @@
       +'<span class="chip">한도 <b>'+s.cap.toLocaleString()+'</b></span>'
       +'<span class="chip">사용 <b>'+pct+'%</b></span> <span class="chip">일페이스 <b>'+paceTarget.toLocaleString()+'</b></span>'
       +'<span class="chip">🔥 '+sc+'일'+(sc>=3&&ready?' · 🛡️':'')+'</span>'
-      +'<span class="chip">오늘 <b>'+todaySp.toLocaleString()+'</b></span>'+'<span class="chip">일일soft <b>'+softDaily.toLocaleString()+'</b></span>'+'<span class="chip">7일 <b>'+wSpend.toLocaleString()+'</b></span>'+'<span class="chip">주잔여 <b style="color:'+(wLeft<0?'#f87171':'var(--gold)')+'">'+wLeft.toLocaleString()+'</b></span>'+(todaySp>softDaily?'<span class="chip" style="color:#f87171">⚠초과</span>':'<span class="chip">일일OK</span>')+'<span class="chip">자정 리셋 '+fomoLeft()+'</span></div>'
+      +'<span class="chip">오늘 <b>'+todaySp.toLocaleString()+'</b></span>'+'<span class="chip">일일soft <b>'+softDaily.toLocaleString()+'</b></span>'+'<span class="chip">7일 <b>'+wSpend.toLocaleString()+'</b></span>'+'<span class="chip">전주대비 <b style="color:'+(wDelta>0?'#f87171':'#67e8f9')+'">'+(wDelta>0?'+':'')+wDelta.toLocaleString()+'</b></span>'+'<span class="chip">주잔여 <b style="color:'+(wLeft<0?'#f87171':'var(--gold)')+'">'+wLeft.toLocaleString()+'</b></span>'+(todaySp>softDaily?'<span class="chip" style="color:#f87171">⚠초과</span>':'<span class="chip">일일OK</span>')+'<span class="chip">자정 리셋 '+fomoLeft()+'</span></div>'
       +'<div class="bar"><i style="width:'+pct+'%;background:'+(pct>90?'var(--bad)':pct>70?'#fbbf24':'var(--ok)')+'"></i></div>'
+      +'<div class="sub" style="margin-top:6px">일일 soft 소진 '+softPct+'%</div>'
+      +'<div class="bar" style="height:5px;margin-top:4px"><i style="width:'+softPct+'%;background:'+(softPct>100?'#f87171':softPct>80?'#fbbf24':'#67e8f9')+'"></i></div>'
       +'<div>남음 <b style="color:'+(left<0?'#f87171':'var(--gold)')+'">'+(left).toLocaleString()+'</b>원 · 항목 '+s.items.length+'</div>'
       +'<div style="margin-top:10px"><div class="sub" style="margin-bottom:4px">7일 일별 지출</div><div class="row" style="align-items:flex-end;gap:2px">'+spark+'</div></div></div>'
       +'<div class="card"><label class="sub">주간 한도 수정</label><input id="cap" type="number" value="'+s.cap+'"/><button id="setCap">한도 저장</button><label class="sub">일일 소프트 한도</label><input id="soft" type="number" value="'+softDaily+'"/><button class="sec" id="setSoft">일일 저장</button></div>'
